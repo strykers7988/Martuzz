@@ -968,14 +968,14 @@ function limb(r0, r1, len, seg = 18){
 }
 /* ---------- pelle, testa e viso realistici ---------- */
 const SKIN_MC = {};
-const SKIN_TEX = canvasTex(256, 256, (x, w, h) => speckle(x, w, h, '#ffffff', ['#f3e9e6', '#fbf7f5', '#ecdcd8', '#fff8f4'], 3600, .6, 1.8), 3);
+const SKIN_TEX = canvasTex(256, 256, (x, w, h) => speckle(x, w, h, '#ffffff', ['#faf5f3', '#fdfbfa', '#f7f0ee', '#fffcfa'], 2600, .4, 1.1), 4);
 function skinMat(c, vc = false){ const k = c + (vc ? 'v' : ''); return SKIN_MC[k] || (SKIN_MC[k] = new THREE.MeshPhysicalMaterial({ color: c, map: SKIN_TEX, vertexColors: vc, roughness: .52, sheen: 1, sheenRoughness: .5,
   sheenColor: new THREE.Color(0xff8f80).multiplyScalar(.35), clearcoat: .05, clearcoatRoughness: .7 })); }
 function headGeo(F){
   const R = .112, g = new THREE.SphereGeometry(R, 72, 54), p = g.attributes.position, v = new V3(), col = new Float32Array(p.count*3);
   const G = (dx, dy, s) => Math.exp(-(dx*dx + dy*dy)/(s*s));
   for (let i = 0; i < p.count; i++){ v.fromBufferAttribute(p, i); const y = v.y/R, front = v.z/R;
-    const jaw = y < 0 ? 1 - (F ? .3 : .22)*Math.pow(-y, 1.6) : 1;
+    const jaw = y < 0 ? 1 - (F ? .4 : .26)*Math.pow(-y, 1.5) : 1;
     v.x *= jaw*(F ? .88 : .92); v.z *= (y < 0 ? 1 - .1*Math.pow(-y, 1.4) : 1);
     if (v.z > 0) v.z *= .97; else if (y > -.2) v.z *= 1.07;
     v.y *= 1.14;
@@ -1013,9 +1013,9 @@ const LIP_BASE = new THREE.SphereGeometry(1, 22, 10);
 function lipMesh(m){ const g = LIP_BASE.clone(), me = new THREE.Mesh(g, m); me.userData.base = Float32Array.from(g.attributes.position.array); return me; }
 function shapeLip(me, sx, sy, sz, smile){ const b = me.userData.base, p = me.geometry.attributes.position;
   for (let i = 0; i < p.count; i++){ const x = b[i*3], y = b[i*3 + 1], z = b[i*3 + 2], xx = x*x;
-    p.setXYZ(i, x*sx, y*sy*(1 - .6*xx) + smile*.0075*xx*xx, z*sz - xx*.007); }
+    p.setXYZ(i, x*sx, y*sy*(1 - .7*xx) + smile*.0042*xx*xx - (y > 0 ? 0 : 0), z*sz - xx*.008); }
   p.needsUpdate = true; me.geometry.computeVertexNormals(); }
-const EXPR = { smile: { smile: .85, open: .05, pk: 0, up: .05 }, neutral: { smile: .15, open: 0, pk: 0, up: 0 },
+const EXPR = { smile: { smile: .85, open: .11, pk: 0, up: .05 }, neutral: { smile: .15, open: 0, pk: 0, up: 0 },
   pout: { smile: -.6, open: 0, pk: .7, up: 0 }, worried: { smile: -.2, open: .65, pk: .15, up: .8 } };
 const _tv = new V3();
 function buildFace(head, o){
@@ -1026,7 +1026,7 @@ function buildFace(head, o){
   const eyeMat = new THREE.MeshPhysicalMaterial({ map: irisTex(o.iris || 0x4a2e1d), roughness: .15, clearcoat: 1, clearcoatRoughness: .04 });
   const liner = mat(0x1a0f0a, { roughness: .6 });
   for (const s of [-1, 1]){
-    const so = new THREE.Group(); so.position.set(s*.034, .012, .0835); head.add(so);
+    const so = new THREE.Group(); so.position.set(s*.0345, .012, .0835); so.scale.setScalar(F ? 1.1 : 1.04); head.add(so);
     const eye = new THREE.Mesh(eyeGeo, eyeMat); so.add(eye); f.eyes.push(eye);
     ball(so, .0021, 0xffffff, .0045, .0055, .0137, 1, 1, .5, { emissive: 0xffffff, emissiveIntensity: 1.2 });
     const up = new THREE.Mesh(upGeo, SKM), lo = new THREE.Mesh(loGeo, SKM); so.add(up, lo); f.lids.push([up, lo]);
@@ -1035,7 +1035,7 @@ function buildFace(head, o){
         l.position.set(s*Math.cos(a)*.0155, .0025, Math.sin(a)*.0155); l.rotation.z = -s*(.5 + k*.1); l.rotation.x = -.6; } }
     // sopracciglio a tre ciuffi
     const bg = new THREE.Group(); bg.position.set(s*.035, .037, .1); bg.rotation.y = s*.28; head.add(bg); f.brows.push(bg);
-    const bt = F ? .75 : 1.15;
+    const bt = F ? .55 : 1.15;
     ball(bg, 1, o.brow, -s*.013, -.0015, 0, .011, .0034*bt, .004, { roughness: .9 }); ball(bg, 1, o.brow, 0, .0015, 0, .012, .0036*bt, .004, { roughness: .9 }); ball(bg, 1, o.brow, s*.013, -.0005, -.002, .009, .0026*bt, .0035, { roughness: .9 });
     const ch = add(head, new THREE.CircleGeometry(.026, 20), 0xffffff, s*.057, -.026, .094, { map: BLUSH_TEX, transparent: true, opacity: F ? .45 : .18, depthWrite: false, roughness: 1 });
     ch.rotation.y = s*.55; ch.castShadow = false; f.cheeks.push(ch);
@@ -1045,14 +1045,14 @@ function buildFace(head, o){
   }
   // naso
   const nose = new THREE.Group(); nose.position.set(0, -.012, .099); head.add(nose);
-  ball(nose, 1, o.skin, 0, .014, .0, .0075, .024, .01, SKM);
-  ball(nose, .0105, o.skin, 0, -.017, .0085, 1, .9, 1, SKM);
-  for (const s of [-1, 1]){ ball(nose, .0078, o.skin, s*.0098, -.0195, .0015, 1, .85, 1, SKM); ball(nose, .0032, 0x4a2a20, s*.0058, -.0262, .0045, 1, .55, 1.1, { roughness: 1 }); }
+  ball(nose, 1, o.skin, 0, .012, -.001, .0062, .026, .0095, SKM);
+  ball(nose, .0088, o.skin, 0, -.0165, .0078, 1, .85, 1.05, SKM);
+  for (const s of [-1, 1]){ ball(nose, .006, o.skin, s*.0085, -.0185, .001, 1, .8, 1, SKM); ball(nose, .0024, 0x5a3428, s*.0045, -.0245, .0035, 1.2, .45, 1.3, { roughness: 1 }); }
   // bocca
   const mo = new THREE.Group(); mo.position.set(0, -.0595, .1015); head.add(mo); f.mouth = mo;
   const lipM = new THREE.MeshPhysicalMaterial({ color: o.lip, roughness: .35, clearcoat: .35, clearcoatRoughness: .3, sheen: .5, sheenColor: new THREE.Color(0xffb0b0) });
-  f.cav = ball(mo, 1, 0x3a0d10, 0, -.001, -.004, .016, .002, .006, { roughness: .8 });
-  f.teeth = ball(mo, 1, 0xf6f2ea, 0, .0005, -.0005, .0135, .0032, .0042, { roughness: .25 });
+  f.cav = ball(mo, 1, 0x5a1c1e, 0, -.0015, -.0055, .016, .002, .006, { roughness: .8 });
+  f.teeth = ball(mo, 1, 0xf4efe6, 0, .0012, -.0012, .0135, .0032, .0042, { roughness: .3 });
   f.ul = lipMesh(lipM); f.ll = lipMesh(lipM); mo.add(f.ul, f.ll);
   f.set = (name, eyes = 'open') => { Object.assign(f.tg, EXPR[name] || EXPR.neutral); f.tg.lid = eyes === 'open' ? 1 : 0; };
   f.angry = on => { f.tg.ang = on ? 1 : 0; };
@@ -1066,18 +1066,18 @@ function buildFace(head, o){
       if (target){ e.parent.updateWorldMatrix(true, false); const lp = e.parent.worldToLocal(_tv.copy(target)); if (lp.z > 0){ yaw = Math.atan2(lp.x, lp.z); pit = Math.atan2(lp.y, Math.hypot(lp.x, lp.z)); } }
       e.rotation.set(-THREE.MathUtils.clamp(pit, -.3, .3) - f.sacc[1], THREE.MathUtils.clamp(yaw, -.5, .5) + f.sacc[0], 0); });
     f.brows.forEach((b, i) => { const s = i ? 1 : -1; b.rotation.z = -s*(F ? .08 : .04)*(1 - S.ang) + s*.36*S.ang - s*.22*S.up; b.position.y = .037 - .004*S.ang + .005*S.up; });
-    f.cheeks.forEach(c => { c.material.opacity = (F ? .32 : .12) + Math.max(0, S.smile)*(F ? .22 : .1); });
+    f.cheeks.forEach(c => { c.material.opacity = (F ? .16 : .06) + Math.max(0, S.smile)*(F ? .12 : .06); });
     const key = [S.smile, S.open, S.pk].map(v => Math.round(v*300)).join();
     if (key !== f.shaped){ f.shaped = key; const sm1 = S.smile, op = Math.max(0, S.open), pk = S.pk, nar = 1 - .3*pk;
       shapeLip(f.ul, .022*(1 + .12*sm1)*nar, .0056, .0078 + .002*pk, sm1); shapeLip(f.ll, .0205*(1 + .1*sm1)*nar, .0072, .009 + .002*pk, sm1*.9);
-      f.ul.position.set(0, .0038 + op*.0015, .004*pk); f.ll.position.set(0, -.0052 - op*.012, .0045*pk);
-      f.cav.scale.set(.016*(1 + .15*sm1)*nar, .0012 + op*.012, .006);
-      f.teeth.visible = op > .12; f.teeth.scale.set(.0135*(1 + .1*sm1), .0032, .0042); }
+      f.ul.position.set(0, .0033 + op*.001, .004*pk); f.ll.position.set(0, -.0046 - op*.011, .0045*pk);
+      f.cav.scale.set(.016*(1 + .15*sm1)*nar, .0012 + op*.01, .006); f.teeth.scale.set(.0145*(1 + .1*sm1), .0012 + op*.012, .0045);
+      f.teeth.visible = op > .1; }
   };
   return f;
 }
 function longHair(head, c1, c2){
-  add(head, new THREE.SphereGeometry(.121, 36, 22, 0, Math.PI*2, 0, Math.PI*.58), c1, 0, .008, -.008, { roughness: .45 }).rotation.x = -.42;
+  add(head, new THREE.SphereGeometry(.121, 36, 22, 0, Math.PI*2, 0, Math.PI*.5), c1, 0, .006, -.012, { roughness: .45 }).rotation.x = -.62;
   ball(head, 1, c1, 0, -.02, -.035, .118, .13, .1, { roughness: .55 });
   const buckets = [[], []];
   const strand = (a0, a1, phi0, L, ph, front) => {
@@ -1088,10 +1088,10 @@ function longHair(head, c1, c2){
       if (t <= .28){ const ph2 = phi0 + (Math.PI/2 + .15 - phi0)*(t/.28), r = .127;
         x = Math.sin(ph2)*Math.sin(a)*r; y = Math.cos(ph2)*r*1.14; z = Math.sin(ph2)*Math.cos(a)*r; }
       else { const u = (t - .28)/.72, y0 = Math.cos(Math.PI/2 + .15)*.127*1.14;
-        y = y0 - u*L; const hx = Math.sin(a)*(.205 + .02*Math.abs(Math.cos(a))), hz = Math.cos(a)*(front ? .135 : .13);
+        y = y0 - u*L; const hx = Math.sin(a)*(.172 + .02*Math.abs(Math.cos(a))), hz = Math.cos(a)*(front ? .135 : .13);
         const k = sm(0, .35, u); x = Math.sin(a)*.135*(1 - k) + hx*k; z = Math.cos(a)*.135*(1 - k) + hz*k;
-        const w = Math.sin(u*11 + ph)*.014*u + Math.sin(u*5 + ph*2)*.008;
-        x += Math.cos(a)*w; z -= Math.sin(a)*w; x += Math.sin(a)*Math.sin(u*9 + ph)*.01*u; z += Math.cos(a)*Math.sin(u*9 + ph)*.01*u; }
+        const W = window.__wavy || 1, w = (Math.sin(u*14 + ph)*.02*u + Math.sin(u*6 + ph*2)*.01)*W, vol = 1 + Math.sin(Math.min(1, u*1.4)*Math.PI)*.12*W;
+        x *= vol; z *= vol; x += Math.cos(a)*w; z -= Math.sin(a)*w; x += Math.sin(a)*Math.sin(u*12 + ph)*.016*u*W; z += Math.cos(a)*Math.sin(u*12 + ph)*.016*u*W; }
       pts.push(new V3(x, y, z));
     }
     const curve = new THREE.CatmullRomCurve3(pts); buckets[(rnd()*2)|0].push([curve.getPoints(24), .05 + rnd()*.02]);
@@ -1109,7 +1109,7 @@ function longHair(head, c1, c2){
         pos.push(q.x - sd.x*w, q.y - sd.y*w, q.z - sd.z*w, q.x + sd.x*w, q.y + sd.y*w, q.z + sd.z*w); uv.push(0, 1 - i/(n - 1), 1, 1 - i/(n - 1));
         if (i < n - 1){ const a = off + i*2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } } }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
-    const c = bi ? c2 : c1, m = new THREE.Mesh(g, new THREE.MeshPhysicalMaterial({ color: c, map: HAIR_TEX, alphaTest: .32, side: THREE.DoubleSide, roughness: .42, sheen: .8, sheenRoughness: .35, sheenColor: new THREE.Color(c).lerp(new THREE.Color(0xd9a070), .5) }));
+    const c = bi ? c2 : c1, hm = MC[c + '{"hair":' + bi + '}'] = new THREE.MeshPhysicalMaterial({ color: c, map: HAIR_TEX, alphaTest: .32, side: THREE.DoubleSide, roughness: .42, sheen: .8, sheenRoughness: .35, sheenColor: new THREE.Color(c).lerp(new THREE.Color(0xd9a070), .5) }), m = new THREE.Mesh(g, hm);
     m.castShadow = true; head.add(m); });
 }
 const HAIR_TEX = canvasTex(128, 512, (x, w, h) => { x.clearRect(0, 0, w, h);
@@ -1118,16 +1118,16 @@ const HAIR_TEX = canvasTex(128, 512, (x, w, h) => { x.clearRect(0, 0, w, h);
     x.bezierCurveTo(px + (Math.random() - .5)*10, h*.3, px + (Math.random() - .5)*14, h*.7, px + (Math.random() - .5)*18, h*l); x.stroke(); } }, 1, true);
 HAIR_TEX.repeat.set(1, 1); HAIR_TEX.wrapS = HAIR_TEX.wrapT = THREE.ClampToEdgeWrapping;
 function laurel(head, dark){
-  const cr = new THREE.Group(); cr.position.set(0, .068, -.008); cr.rotation.x = .2; head.add(cr);
+  const cr = new THREE.Group(); cr.position.set(0, .104, -.012); cr.rotation.x = .1; cr.scale.set(1.04, 1, 1.06); head.add(cr);
   const LG = dark ? [0x1d2a18, 0x2a1414, 0x241f12] : [0x2d6634, 0x3f7a3a, 0x568d45];
-  for (let ring = 0; ring < 2; ring++) for (let i = 0; i < 30; i++){
-    const a = (i + ring*.5)/30*Math.PI*2, R = .126 + ring*.008;
-    const leaf = ball(cr, 1, LG[(i + ring) % 3], Math.cos(a)*R, ring ? .01 : -.003, Math.sin(a)*R, .03, .008, .014, { roughness: .6 });
-    leaf.rotation.set(0, -(a + Math.PI/2), (i % 2 ? .45 : -.35) + ring*.2); }
+  for (let ring = 0; ring < 3; ring++) for (let i = 0; i < 34; i++){
+    const a = (i + ring*.33)/34*Math.PI*2, R = .126 + ring*.009 + rnd()*.006;
+    const leaf = ball(cr, 1, LG[(i + ring) % 3], Math.cos(a)*R, -.006 + ring*.011 + rnd()*.006, Math.sin(a)*R, .036, .009, .016, { roughness: .55 });
+    leaf.rotation.set((rnd() - .5)*.6, -(a + Math.PI/2) + (rnd() - .5)*.5, (i % 2 ? .55 : -.45) + ring*.25); }
   const rose = dark ? 0x8e0a18 : 0xf7f3e6;
   for (const a of [Math.PI/2, Math.PI/2 - .5, Math.PI/2 + .5, Math.PI/2 - 1.1, Math.PI/2 + 1.1, Math.PI/2 - 1.8, Math.PI/2 + 1.8, -Math.PI/2, -Math.PI/2 + .7]){
-    const x = Math.cos(a)*.132, z = Math.sin(a)*.132; ball(cr, .017, rose, x, .012, z, 1, .85, 1, { roughness: .6 }); ball(cr, .009, dark ? 0x5a0610 : 0xe6dcc3, x*1.03, .021, z*1.03); }
-  for (let i = 0; i < 30; i++){ const a = rnd()*Math.PI*2; ball(cr, .0045, dark ? 0x3a0a0a : 0xffffff, Math.cos(a)*.137, .012 + rnd()*.018, Math.sin(a)*.137); }
+    const x = Math.cos(a)*.136, z = Math.sin(a)*.136; ball(cr, .019, rose, x, .016, z, 1, .85, 1, { roughness: .6 }); ball(cr, .009, dark ? 0x5a0610 : 0xe6dcc3, x*1.03, .021, z*1.03); }
+  for (let i = 0; i < 46; i++){ const a = rnd()*Math.PI*2, r = .14 + rnd()*.01; ball(cr, .006, dark ? 0x3a0a0a : 0xffffff, Math.cos(a)*r, .01 + rnd()*.03, Math.sin(a)*r); }
 }
 function curlyHair(head, c1, c2){
   add(head, new THREE.SphereGeometry(.121, 32, 20, 0, Math.PI*2, 0, Math.PI*.5), c1, 0, .01, -.006, { roughness: .75 }).rotation.x = -.26;
@@ -1151,16 +1151,18 @@ function buildHuman(o){
     const hip = new THREE.Group(); hip.position.set(s*(F ? .083 : .078), 0, 0); pelvis.add(hip);
     add(hip, limb(F ? .086 : .082, .052, .43), o.pants, 0, 0, 0, cloth);
     const knee = new THREE.Group(); knee.position.y = -.43; hip.add(knee);
-    add(knee, limb(.054, .037, .42), o.pants, 0, 0, 0, cloth);
+    add(knee, limb(.054, F ? .045 : .037, .42), o.pants, 0, 0, 0, cloth);
     const ankle = new THREE.Group(); ankle.position.y = -.42; knee.add(ankle);
-    if (F){ ball(ankle, .032, SK, 0, -.005, 0, .9, 1, .9, skin); ball(ankle, 1, o.shoes, 0, -.03, .035, .04, .026, .112, { roughness: .3 }); }
+    if (F){ ball(ankle, 1, o.shoes, 0, -.012, .045, .034, .03, .09, { roughness: .25 }); const hb = box(ankle, .022, .055, .022, o.shoes, 0, -.03, -.035, { roughness: .25 }); hb.rotation.x = .12;
+      ball(ankle, 1, o.shoes, 0, -.045, .085, .03, .014, .04, { roughness: .25 }); }
     else ball(ankle, 1, o.shoes, 0, -.028, .04, .048, .034, .13, { roughness: .22 });
     hip.userData.knee = knee; legs.push(hip);
   }
   const spine = new THREE.Group(); pelvis.add(spine);
-  const jp = F ? [[.0005, .04], [.168, .05], [.164, .12], [.134, .2], [.113, .27], [.128, .34], [.153, .4], [.153, .44], [.165, .47], [.13, .505], [.062, .53], [.0005, .535]]
+  const jp = F ? [[.0005, .04], [.166, .05], [.16, .12], [.13, .2], [.11, .27], [.124, .34], [.145, .4], [.146, .44], [.152, .47], [.12, .505], [.058, .53], [.0005, .535]]
                : [[.0005, .03], [.164, .04], [.154, .12], [.144, .22], [.14, .28], [.152, .34], [.17, .42], [.188, .47], [.152, .51], [.064, .535], [.0005, .54]];
   add(spine, lathe(jp, 30), o.jacket, 0, 0, 0, cloth).scale.z = .6;
+  add(spine, lathe(F ? [[.0005, -.1], [.158, -.1], [.165, -.02], [.152, .06], [.0005, .07]] : [[.0005, -.06], [.15, -.06], [.152, .0], [.15, .05], [.0005, .06]], 30), o.jacket, 0, 0, 0, cloth).scale.z = .66;
   const vy0 = F ? .335 : .3, h = .525 - vy0, zf = (F ? .128 : .148)*.6 + .004;
   const vg = new THREE.Group(); vg.position.set(0, vy0, zf); vg.rotation.x = -.32; spine.add(vg);
   const vs = new THREE.Shape(); vs.moveTo(-.052, h); vs.lineTo(.052, h); vs.lineTo(0, 0); vs.closePath();
@@ -1171,12 +1173,12 @@ function buildHuman(o){
     box(spine, .045, .008, .01, o.lapel, s*.075, .13, (F ? .16 : .155)*.6 + .002, cloth);
   }
   for (const y of [vy0 - .04, vy0 - .13]) ball(spine, .0065, o.button || 0x0d0f18, 0, y, (F ? .116 : .142)*.6 + .006);
-  add(spine, new THREE.CylinderGeometry(F ? .033 : .038, F ? .04 : .046, .13, 20), SK, 0, .585, -.006, skin);
+  add(spine, new THREE.CylinderGeometry(F ? .03 : .037, F ? .038 : .046, .12, 20), o.skinDark || SK, 0, .585, -.008, skinMat(o.skinDark || SK));
   const neck = new THREE.Group(); neck.position.set(0, .655, -.004); spine.add(neck);
-  const head = new THREE.Group(); head.position.set(0, .05, .008); head.scale.set(.9, .94, .92); neck.add(head);
+  const head = new THREE.Group(); head.position.set(0, .036, .01); head.scale.set(.92, .95, .93); neck.add(head);
   add(head, F ? HEAD_F : HEAD_M, SK, 0, 0, 0, skinMat(SK, true));
   const face = buildFace(head, o);
-  const arms = [], shX = F ? .148 : .168;
+  const arms = [], shX = F ? .14 : .168;
   for (const s of [-1, 1]){
     const sh = new THREE.Group(); sh.position.set(s*shX, .455, 0); sh.rotation.z = s*.1; spine.add(sh);
     ball(sh, F ? .05 : .056, o.jacket, 0, 0, 0, 1, 1, .92, cloth);
@@ -1194,7 +1196,7 @@ function buildHuman(o){
     add(tg, new THREE.CapsuleGeometry(.0062*hs, .03*hs, 4, 8), SK, 0, -.017*hs, 0, skin);
     sh.userData.elbow = el; arms.push(sh);
   }
-  if (o.hair === 'long'){ seed = o.seed || 5; longHair(head, o.hair1, o.hair2); laurel(head, o.evil); }
+  if (o.hair === 'long'){ seed = o.seed || 5; window.__wavy = 1.6; longHair(head, o.hair1, o.hair2); window.__wavy = 1; laurel(head, o.evil); }
   else curlyHair(head, o.hair1, o.hair2);
   if (o.earring){ const e = add(head, new THREE.TorusGeometry(.0085, .0022, 8, 20), 0xdadada, -.111, -.028, .004, { metalness: 1, roughness: .2 }); e.rotation.y = Math.PI/2; }
   if (F){ for (const s of [-1, 1]) ball(head, .004, 0xe8e8e8, s*.108, -.03, .004, 1, 1, 1, { metalness: 1, roughness: .2 }); }
@@ -1216,8 +1218,8 @@ function animatePerson(p, phase, speed, air, t){
   p.spine.rotation.set(.03*k, sw*.08*k, 0); p.body.rotation.set(0, 0, 0);
   p.head.rotation.set(0, -sw*.05*k, 0);
 }
-const OUT_LEI = { female: true, scale: 1.15, skin: 0xf1c9ad, skinDark: 0xe4b294, lip: 0xc46a72, brow: 0x3a2418, iris: 0x4a2e1d,
-  jacket: 0x1c2238, lapel: 0x141a2c, top: 0xf4f0e8, pants: 0x15171f, shoes: 0x0d0d0f, hair: 'long', hair1: 0x2e1b12, hair2: 0x4a2c1c, seed: 5 };
+const OUT_LEI = { female: true, scale: 1.15, skin: 0xefc4a6, skinDark: 0xe0ac8c, lip: 0xc0626a, brow: 0x3a2418, iris: 0x4a2e1d,
+  jacket: 0x1c2238, lapel: 0x141a2c, top: 0xf4f0e8, pants: 0x15171f, shoes: 0x0d0d0f, hair: 'long', hair1: 0x3a2318, hair2: 0x7a5030, seed: 5 };
 const OUT_SOSIA = Object.assign({}, OUT_LEI, { jacket: 0xa8101c, lapel: 0x6a0710, top: 0xd0202d, pants: 0x8e0c18, shoes: 0x4a0008, iris: 0x6a0c0c,
   lip: 0x8a1420, evil: true, expr: 'pout', hair1: 0x24140d, hair2: 0x3a2116, seed: 5, button: 0x3a0208 });
 const OUT_LUI = { female: false, scale: 1.27, skin: 0xe3b896, skinDark: 0xd2a07e, lip: 0xae6a62, brow: 0x22160f, iris: 0x4a2e1d,
@@ -1368,7 +1370,7 @@ const luiSogno = buildHuman(OUT_LUI); luiSogno.root.visible = false; scene.add(l
 const phone = box(luiSogno.arms[1].userData.elbow, .075, .14, .012, 0x15161a, 0, -.31, .045, { roughness: .3, metalness: .4 });
 const FILM_POS = new V3(0, 0, -68.4);
 const SOSIA_TO_LEI = [[0xa8101c, 0x1c2238], [0x6a0710, 0x141a2c], [0xd0202d, 0xf4f0e8], [0x8e0c18, 0x15171f], [0x4a0008, 0x0d0d0f], [0x6a0c0c, 0x4a2e1d], [0x8a1420, 0xc46a72],
-  [0x3a0208, 0x0d0f18], [0x24140d, 0x2e1b12], [0x3a2116, 0x4a2c1c], [0x1d2a18, 0x2d6634], [0x2a1414, 0x3f7a3a], [0x241f12, 0x568d45], [0x8e0a18, 0xf7f3e6], [0x5a0610, 0xe6dcc3], [0x3a0a0a, 0xffffff]];
+  [0x3a0208, 0x0d0f18], [0x24140d, 0x3a2318], [0x3a2116, 0x7a5030], [0x1d2a18, 0x2d6634], [0x2a1414, 0x3f7a3a], [0x241f12, 0x568d45], [0x8e0a18, 0xf7f3e6], [0x5a0610, 0xe6dcc3], [0x3a0a0a, 0xffffff]];
 let sosiaSwap = [];
 function prepMorph(){ if (sosiaSwap.length) return; const byMat = new Map();
   for (const [from, to] of SOSIA_TO_LEI) for (const key in MC) if (key.startsWith(from + '{')) byMat.set(MC[key], to);
